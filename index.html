@@ -525,7 +525,7 @@
     if (!ticking) { ticking = true; window.requestAnimationFrame(updateHeader); }
   }, { passive: true });
   window.addEventListener('keydown', event => {
-    if (event.key === 'Home') header.classList.remove('header-scroll-hidden');
+    if (event.key === 'Home') header.classList.remove('header-scroll-hidden'); 
   });
 })();
 </script>
