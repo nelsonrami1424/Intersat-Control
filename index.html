@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        try { var _t = localStorage.getItem('intersat_theme'); if (_t === 'dark' || (!_t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark'); } catch (e) {}
+    </script>
+    <title>Intersat Los Andes - Control Biométrico de Asistencia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF + AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Enlace a tu archivo CSS personalizado -->
+    <link rel="stylesheet" href="./css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            blue: '#0056b3',
+                            navy: '#0B2545',
+                            darkblue: '#081B33',
+                            orange: '#FF6B00',
+                            yellow: '#F5A623',
+                            bglight: '#E2E8F0' // Fondo gris-azulino con verdadero contraste antifatiga
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-200/90 dark:bg-[#0d131d] font-sans text-slate-900 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Encabezado Superior Corporativo en Azul Marino (Alto Contraste) -->
+    <header class="bg-brand-navy dark:bg-[#131c2a] text-white border-b-2 border-brand-orange sticky top-0 z-30 shadow-lg transition-colors duration-200">
+        <div class="header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-24 flex flex-wrap items-center justify-between gap-x-5 gap-y-3 py-3">
+            <div class="flex items-center space-x-4">
+                <!-- LOGO DE INTERSAT (Redondo y destacado) -->
+                <div class="w-20 h-20 min-w-[5rem] min-h-[5rem] max-w-[5rem] max-h-[5rem] rounded-full bg-white flex items-center justify-center shadow-md border-2 border-brand-orange flex-shrink-0 overflow-hidden p-1">
+                    <img src="./images/logo.png" alt="Logo Intersat Los Andes" class="w-full h-full object-contain rounded-full" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%230056b3\'><path d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/></svg>'">
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight leading-tight text-white">INTERSAT LOS ANDES</h1>
+                    <p class="text-xs font-bold text-brand-orange uppercase tracking-wider">Control Biométrico de Asistencia - Sede La Grita</p>
+                </div>
+            </div>
+
+            <!-- Menú de Pestañas (Navegación Contrastada) -->
+            <nav class="main-nav hidden md:flex flex-wrap justify-center gap-1 bg-brand-darkblue dark:bg-[#17283b] p-1.5 rounded-2xl no-print border border-slate-600 shadow-inner">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2 text-xs font-bold rounded-xl transition-all bg-white text-brand-navy shadow-md">
+                    <i class="fa-solid fa-chart-line mr-1.5"></i> Dashboard
+                </button>
+                <button onclick="switchTab('hours')" id="nav-hours" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
+                    <i class="fa-solid fa-hourglass-half mr-1.5"></i> Control de Horas
+                </button>
+                <button onclick="switchTab('workers')" id="nav-workers" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
+                    <i class="fa-solid fa-users mr-1.5"></i> Trabajadores
+                </button>
+                <button onclick="switchTab('categories')" id="nav-categories" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
+                    <i class="fa-solid fa-tags mr-1.5"></i> Áreas / Categorías
+                </button>
+                <button onclick="switchTab('simulator')" id="nav-simulator" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
+                    <i class="fa-solid fa-fingerprint mr-1.5"></i> Capta Huellas
+                </button>
+            </nav>
+
+            <div class="flex items-center space-x-3 no-print">
+                <div id="live-clock-container" class="hidden lg:flex items-center gap-3 text-right rounded-xl border border-slate-600/70 bg-slate-900/40 px-3 py-2 flex-shrink-0">
+                    <div>
+                        <div id="live-clock" class="text-xs font-black text-white">--:--:--</div>
+                        <div id="live-date" class="text-[10px] text-slate-300">---</div>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <span class="w-1.5 h-1.5 mr-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Online
+                    </span>
+                </div>
+                <button id="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition flex-shrink-0 border border-white/20">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+        <!-- ================= PESTAÑA 1: DASHBOARD ASISTENCIA ================= -->
+        <section id="tab-dashboard" class="space-y-6">
+            <!-- Barra de Filtros en Tarjeta Gris Oscura / Contrastada -->
+            <div id="filter-bar" class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md flex flex-col md:flex-row gap-4 items-center justify-between no-print">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2">
+                        <i class="fa-regular fa-calendar text-brand-blue dark:text-blue-400 font-bold"></i>
+                        <input type="date" id="filter-date" onchange="renderDashboard()" class="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
+                    </div>
+                    <div class="relative flex-1 sm:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                        <input type="text" id="search-input" oninput="renderDashboard()" placeholder="Buscar por nombre o C.I..." class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                    </div>
+                    <select id="filter-category" onchange="renderDashboard()" class="bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
+                        <option value="">Todas las Categorías</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
+                    <button onclick="resetTodayAttendance()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-[#223041] dark:hover:bg-[#2a3a4d] text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl transition flex items-center border border-slate-300 dark:border-[#2a3a4d]">
+                        <i class="fa-solid fa-rotate mr-1.5 text-slate-600 dark:text-slate-300"></i> Reiniciar Día
+                    </button>
+                    <button onclick="exportDailyPDF()" class="px-4 py-2 bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center">
+                        <i class="fa-solid fa-file-pdf mr-1.5"></i> Descargar Reporte PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Resumen con Marcos Definidos y Colores Resaltados -->
+            <div id="stats-cards" class="grid grid-cols-2 md:grid-cols-5 gap-4 no-print">
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md">
+                    <div class="text-[11px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Total Registrados</div>
+                    <div id="stat-total" class="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-emerald-400/80 dark:border-emerald-600 shadow-md border-l-8 border-l-emerald-500">
+                    <div class="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">A Tiempo (Verde)</div>
+                    <div id="stat-ontime" class="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-amber-300/80 dark:border-amber-600 shadow-md border-l-8 border-l-amber-400">
+                    <div class="text-[11px] font-extrabold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Atraso Leve (Amarillo)</div>
+                    <div id="stat-late-mild" class="text-2xl font-black text-amber-700 dark:text-amber-300 mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-orange-300/80 dark:border-orange-600 shadow-md border-l-8 border-l-brand-orange">
+                    <div class="text-[11px] font-extrabold text-orange-800 dark:text-orange-400 uppercase tracking-wider">Atraso Mod. (Naranja)</div>
+                    <div id="stat-late-mod" class="text-2xl font-black text-orange-700 dark:text-orange-300 mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-red-300/80 dark:border-red-600 shadow-md border-l-8 border-l-red-500 col-span-2 md:col-span-1">
+                    <div class="text-[11px] font-extrabold text-red-800 dark:text-red-400 uppercase tracking-wider">Atraso Grave (Rojo)</div>
+                    <div id="stat-late-grave" class="text-2xl font-black text-red-700 dark:text-red-300 mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Tabla de Asistencia con Encabezado Azul e Iluminación de Filas -->
+            <div id="attendance-table-container" class="bg-white dark:bg-[#17212d] rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b-2 border-slate-200 dark:border-[#2a3a4d] flex justify-between items-center bg-slate-100 dark:bg-[#1b2735]">
+                    <h2 class="text-xs font-black text-brand-navy dark:text-slate-100 uppercase tracking-wider" id="table-main-title">REPORTE DIARIO DE FICHAJE BIOMÉTRICO DE PERSONAL</h2>
+                    <span id="attendance-date-label" class="text-xs font-bold text-brand-blue dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3 py-1 rounded-lg border border-blue-200 dark:border-blue-800">Fecha: Hoy</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brand-navy/90 text-white text-[11px] font-bold uppercase tracking-wider">
+                                <th class="py-3.5 px-4">Trabajador (Horario)</th>
+                                <th class="py-3.5 px-4">Categoría / Área</th>
+                                <th class="py-3.5 px-4 text-center">Entrada</th>
+                                <th class="py-3.5 px-4 text-center">Salida Almuerzo</th>
+                                <th class="py-3.5 px-4 text-center">Regreso Almuerzo</th>
+                                <th class="py-3.5 px-4 text-center">Salida Final</th>
+                                <th class="py-3.5 px-4 text-center">Estado / Atraso</th>
+                                <th class="py-3.5 px-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-table-body" class="divide-y divide-slate-200 dark:divide-[#2a3a4d] text-xs font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA: CONTROL DE HORAS ================= -->
+        <section id="tab-hours" class="space-y-6 hidden no-print">
+            <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div class="flex items-center space-x-2 bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2">
+                        <i class="fa-regular fa-calendar text-brand-blue font-bold"></i>
+                        <input type="month" id="hours-month" onchange="renderHours()" class="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
+                    </div>
+                    <div class="relative flex-1 sm:w-56">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                        <input type="text" id="hours-search" oninput="renderHours()" placeholder="Buscar trabajador..." class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                    </div>
+                    <select id="hours-category" onchange="renderHours()" class="bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
+                        <option value="">Todas las Categorías</option>
+                    </select>
+                    <select id="hours-sort" onchange="renderHours()" class="bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none">
+                        <option value="name">Nombre (A-Z)</option>
+                        <option value="extra">Mayor balance positivo</option>
+                        <option value="debt">Mayor deuda de horas</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <label class="flex items-center space-x-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                        
+                    </label>
+                    <button onclick="exportHoursPDF()" class="px-4 py-2 bg-brand-orange hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center">
+                        <i class="fa-solid fa-file-pdf mr-1.5"></i> Exportar Horas PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjetas de Resumen General -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-emerald-400 shadow-md border-l-8 border-l-emerald-500">
+                    <div class="text-[11px] font-extrabold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">Horas Extra Totales</div>
+                    <div id="hours-total-extra" class="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1">0 h</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-red-400 shadow-md border-l-8 border-l-red-500">
+                    <div class="text-[11px] font-extrabold text-red-800 dark:text-red-400 uppercase tracking-wider">Horas Debidas Totales</div>
+                    <div id="hours-total-debt" class="text-2xl font-black text-red-700 dark:text-red-300 mt-1">0 h</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md">
+                    <div class="text-[11px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Saldo a Favor</div>
+                    <div id="hours-count-extra" class="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-[#17212d] p-4 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md">
+                    <div class="text-[11px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Con Deuda</div>
+                    <div id="hours-count-debt" class="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Apartado: Tarjetas individuales por trabajador -->
+            <div class="bg-white dark:bg-[#17212d] p-5 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md space-y-3">
+                <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleBalanceCards()">
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-xs font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider">Resumen Individual de Balances por Trabajador</h3>
+                        <span id="selected-worker-filter-badge" class="hidden px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-brand-blue dark:text-blue-200 rounded-full text-[10px] font-bold border border-blue-300 dark:border-blue-700">Filtrado</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button id="clear-worker-filter-btn" onclick="event.stopPropagation(); clearWorkerFilter();" class="hidden px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-[10px] font-bold rounded-lg border border-slate-300 dark:border-slate-500 hover:bg-slate-300 dark:hover:bg-slate-600">Ver todos</button>
+                        <i id="balance-cards-icon" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300"></i>
+                    </div>
+                </div>
+                <div id="workers-balance-cards-container" class="transition-all duration-300 overflow-hidden">
+                    <div id="workers-balance-cards" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2"></div>
+                </div>
+            </div>
+
+            <!-- Tabla Detallada de Control de Horas -->
+            <div class="bg-white dark:bg-[#17212d] rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b-2 border-slate-200 dark:border-[#2a3a4d] flex justify-between items-center bg-slate-100 dark:bg-[#1b2735]">
+                    <h2 class="text-xs font-black text-brand-navy dark:text-slate-100 uppercase tracking-wider">REGISTRO MENSUAL - HORAS TRABAJADAS Y DEBIDAS</h2>
+                    <span id="hours-month-label" class="text-xs font-bold text-brand-blue dark:text-blue-400 capitalize bg-blue-50 dark:bg-blue-950 px-3 py-1 rounded-lg border border-blue-200"></span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brand-navy/90 text-white text-[11px] font-bold uppercase tracking-wider">
+                                <th class="py-3.5 px-4">Trabajador</th>
+                                <th class="py-3.5 px-4">Categoría / Área</th>
+                                <th class="py-3.5 px-4 text-center">Días Asistidos</th>
+                                <th class="py-3.5 px-4 text-center">Horas Trabajadas</th>
+                                <th class="py-3.5 px-4 text-center">Horas Debidas (Faltantes)</th>
+                                <th class="py-3.5 px-4 text-center">Balance Neto</th>
+                                <th class="py-3.5 px-4 text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hours-table-body" class="divide-y divide-slate-200 dark:divide-[#2a3a4d] text-xs font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 2: TRABAJADORES ================= -->
+        <section id="tab-workers" class="space-y-6 hidden no-print">
+            <div class="bg-white dark:bg-[#17212d] p-6 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md flex justify-between items-center">
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-900 dark:text-slate-100">Gestión de Personal - Sede La Grita</h2>
+                    <p class="text-xs text-slate-600 dark:text-slate-400 font-medium">Administre los trabajadores, turnos rotativos y horarios personalizados.</p>
+                </div>
+                <button onclick="openWorkerModal()" class="px-4 py-2.5 bg-brand-blue hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i> Nuevo Trabajador
+                </button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)] gap-5 items-start">
+                <aside class="bg-white dark:bg-[#17212d] rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md p-4">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Áreas / categorías</h3>
+                        <span id="workers-category-total" class="text-[10px] font-bold text-slate-500 dark:text-slate-400"></span>
+                    </div>
+                    <nav id="workers-category-tabs" class="flex lg:flex-col gap-2 overflow-x-auto pb-1" aria-label="Filtrar trabajadores por área"></nav>
+                    <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 mt-3">Selecciona un área para mostrar únicamente su personal.</p>
+                </aside>
+                <div class="min-w-0 bg-white dark:bg-[#17212d] rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-lg overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-[#2a3a4d] flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                        <div class="relative flex-1 min-w-0">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input id="workers-search" type="search" oninput="renderWorkersTable()" placeholder="Buscar por nombre, cédula o ID de huella..." aria-label="Buscar trabajadores" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl pl-9 pr-4 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <span id="workers-results-count" class="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap"></span>
+                    </div>
+                    <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-brand-navy/90 text-white text-[11px] font-bold uppercase tracking-wider">
+                            <th class="py-3.5 px-4">Cédula / ID</th>
+                            <th class="py-3.5 px-4">Nombre Completo</th>
+                            <th class="py-3.5 px-4">Categoría / Área</th>
+                            <th class="py-3.5 px-4">Horario Personalizado</th>
+                            <th class="py-3.5 px-4">ID Huella</th>
+                            <th class="py-3.5 px-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workers-table-body" class="divide-y divide-slate-200 dark:divide-[#2a3a4d] text-xs font-medium"></tbody>
+                </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 3: CATEGORÍAS ================= -->
+        <section id="tab-categories" class="space-y-6 hidden no-print">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-[#17212d] p-6 rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md space-y-4">
+                    <h2 class="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase">Añadir Nueva Categoría</h2>
+                    <form onsubmit="handleCategorySubmit(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Nombre de la Categoría</label>
+                            <input type="text" id="cat-name" required placeholder="Ej. Técnicos de Fibra Óptica" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Descripción</label>
+                            <textarea id="cat-desc" rows="2" placeholder="Detalles..." class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-2.5 bg-brand-blue hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md">Guardar Categoría</button>
+                    </form>
+                </div>
+                <div class="md:col-span-2 bg-white dark:bg-[#17212d] rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b-2 border-slate-200 dark:border-[#2a3a4d] bg-slate-100 dark:bg-[#1b2735] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <span class="font-black text-xs uppercase text-brand-navy dark:text-slate-100">Áreas Registradas</span>
+                        <div class="relative w-full sm:max-w-xs">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="search" id="categories-search" oninput="renderCategoriesTable()" placeholder="Buscar área o descripción..." aria-label="Buscar áreas o categorías" class="w-full bg-white dark:bg-[#17212d] border border-slate-300 dark:border-[#2a3a4d] rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-brand-navy/90 text-white text-[11px] font-bold uppercase tracking-wider">
+                                <th class="py-3.5 px-4">Categoría</th>
+                                <th class="py-3.5 px-4">Descripción</th>
+                                <th class="py-3.5 px-4 text-center">Personal</th>
+                                <th class="py-3.5 px-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categories-table-body" class="divide-y divide-slate-200 dark:divide-[#2a3a4d] text-xs font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 4: SIMULADOR (CAPTA HUELLAS) ================= -->
+        <section id="tab-simulator" class="space-y-6 hidden no-print">
+            <div class="max-w-xl mx-auto bg-white dark:bg-[#17212d] rounded-3xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-2xl overflow-hidden">
+                <div class="bg-gradient-to-r from-brand-navy to-brand-blue p-6 text-white text-center">
+                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/20">
+                        <i class="fa-solid fa-fingerprint text-3xl text-brand-orange animate-pulse"></i>
+                    </div>
+                    <h2 class="text-lg font-black">Simulador de Capta Huellas</h2>
+                    <p class="text-xs text-blue-100 mt-1">Escáner biométrico estándar. El sistema detecta automáticamente si es Entrada, Almuerzo o Salida.</p>
+                </div>
+                <div class="p-6 space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1.5">Trabajador</label>
+                        <select id="sim-worker-select" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1.5">Hora simulada del fichaje (Formato 24h)</label>
+                        <input type="time" id="sim-time" step="1" value="08:00:00" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    </div>
+                    <button onclick="simulateBiometricPunch()" class="w-full py-3 bg-brand-orange hover:bg-orange-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-fingerprint text-base"></i>
+                        <span>Colocar Huella en el Dispositivo</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Trabajador -->
+    <div id="worker-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white dark:bg-[#17212d] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border-2 border-slate-300 dark:border-[#2a3a4d]">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-[#2a3a4d] pb-3">
+                <h3 id="modal-title" class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase">Registrar Trabajador</h3>
+                <button onclick="closeWorkerModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleWorkerSubmit(event)" class="space-y-3">
+                <input type="hidden" id="worker-edit-id">
+                <div>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Cédula</label>
+                    <input type="text" id="worker-ci" required placeholder="V-26543122" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Nombre Completo</label>
+                    <input type="text" id="worker-name" required placeholder="Carlos Mendoza" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Categoría / Área</label>
+                    <select id="worker-category" required class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Hora Entrada</label>
+                        <input type="time" id="worker-entry-time" required value="08:00" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">Hora Salida</label>
+                        <input type="time" id="worker-exit-time" required value="18:00" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1">ID Huella</label>
+                    <input type="text" id="worker-fingerprint" required class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeWorkerModal()" class="flex-1 py-2 bg-slate-200 dark:bg-[#223041] text-slate-800 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-300">Cancelar</button>
+                    <button type="submit" class="flex-1 py-2 bg-brand-blue text-white text-xs font-bold rounded-xl shadow-md">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Edición Manual / Permisos Específicos por Marcaje -->
+    <div id="attendance-edit-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white dark:bg-[#17212d] rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border-2 border-slate-300 dark:border-[#2a3a4d]">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-[#2a3a4d] pb-3">
+                <h3 id="edit-modal-title" class="text-sm font-black text-slate-900 dark:text-slate-100 uppercase">Editar Fichaje / Asignar Permiso Específico</h3>
+                <button onclick="closeAttendanceEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleAttendanceEditSubmit(event)" class="space-y-4">
+                <input type="hidden" id="edit-worker-id">
+                <input type="hidden" id="edit-date-str">
+                <div>
+                    <label id="edit-worker-info" class="block text-xs font-black text-brand-blue dark:text-blue-400 mb-1">Trabajador</label>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Escriba la hora o marque 'Permiso' en la casilla del marcaje específico que desea justificar.</p>
+                </div>
+
+                <!-- Cuadrícula de Horas con Opción de Permiso Individual -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Entrada -->
+                    <div class="p-3 bg-slate-100 dark:bg-[#1b2735] rounded-2xl border border-slate-300 dark:border-[#2a3a4d] space-y-2">
+                        <label class="block text-xs font-extrabold text-slate-900 dark:text-slate-200">Entrada Mañana</label>
+                        <input type="text" id="edit-entry" placeholder="08:00 o -" class="w-full bg-white dark:bg-[#17212d] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-200">
+                        <label class="flex items-center space-x-2 pt-1 cursor-pointer select-none">
+                            <input type="checkbox" id="check-permiso-entry" onchange="toggleIndividualPermiso('entry')" class="w-3.5 h-3.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                            <span class="text-[11px] font-bold text-blue-700 dark:text-blue-400">Permiso Entrada</span>
+                        </label>
+                    </div>
+
+                    <!-- Salida Almuerzo -->
+                    <div class="p-3 bg-slate-100 dark:bg-[#1b2735] rounded-2xl border border-slate-300 dark:border-[#2a3a4d] space-y-2">
+                        <label class="block text-xs font-extrabold text-slate-900 dark:text-slate-200">Salida Almuerzo</label>
+                        <input type="text" id="edit-lunch-out" placeholder="12:00 o -" class="w-full bg-white dark:bg-[#17212d] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-200">
+                        <label class="flex items-center space-x-2 pt-1 cursor-pointer select-none">
+                            <input type="checkbox" id="check-permiso-lunch-out" onchange="toggleIndividualPermiso('lunch_out')" class="w-3.5 h-3.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                            <span class="text-[11px] font-bold text-blue-700 dark:text-blue-400">Permiso Salida Alm.</span>
+                        </label>
+                    </div>
+
+                    <!-- Regreso Almuerzo -->
+                    <div class="p-3 bg-slate-100 dark:bg-[#1b2735] rounded-2xl border border-slate-300 dark:border-[#2a3a4d] space-y-2">
+                        <label class="block text-xs font-extrabold text-slate-900 dark:text-slate-200">Regreso Almuerzo</label>
+                        <input type="text" id="edit-lunch-in" placeholder="14:00 o -" class="w-full bg-white dark:bg-[#17212d] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-200">
+                        <label class="flex items-center space-x-2 pt-1 cursor-pointer select-none">
+                            <input type="checkbox" id="check-permiso-lunch-in" onchange="toggleIndividualPermiso('lunch_in')" class="w-3.5 h-3.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                            <span class="text-[11px] font-bold text-blue-700 dark:text-blue-400">Permiso Regreso Alm.</span>
+                        </label>
+                    </div>
+
+                    <!-- Salida Final -->
+                    <div class="p-3 bg-slate-100 dark:bg-[#1b2735] rounded-2xl border border-slate-300 dark:border-[#2a3a4d] space-y-2">
+                        <label class="block text-xs font-extrabold text-slate-900 dark:text-slate-200">Salida Final Tarde</label>
+                        <input type="text" id="edit-exit" placeholder="18:00 o -" class="w-full bg-white dark:bg-[#17212d] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-200">
+                        <label class="flex items-center space-x-2 pt-1 cursor-pointer select-none">
+                            <input type="checkbox" id="check-permiso-exit" onchange="toggleIndividualPermiso('exit')" class="w-3.5 h-3.5 text-brand-blue rounded border-slate-300 focus:ring-brand-blue">
+                            <span class="text-[11px] font-bold text-blue-700 dark:text-blue-400">Permiso Salida Tarde</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeAttendanceEditModal()" class="flex-1 py-2 bg-slate-200 dark:bg-[#223041] text-slate-800 dark:text-slate-300 text-xs font-bold rounded-xl border border-slate-300">Cancelar</button>
+                    <button type="submit" class="flex-1 py-2 bg-brand-blue text-white text-xs font-bold rounded-xl shadow-md">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast-notification" class="fixed bottom-6 right-6 bg-brand-navy text-white px-5 py-3 rounded-2xl shadow-2xl z-50 text-xs font-bold border border-white/20 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-3 no-print">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-message">Operación realizada.</span>
+    </div>
+
+    <!-- Archivo JS Principal -->
+    <script src="./js/logo.js"></script>
+    <script src="./js/auth.js"></script>
+    <script src="./js/app.js"></script>
+    <script src="./js/backups.js"></script>
+
+<script>
+// Oculta el encabezado al bajar y lo vuelve a mostrar al subir.
+(function () {
+  const header = document.querySelector('body > header');
+  if (!header) return;
+  let lastY = window.scrollY || 0;
+  let ticking = false;
+  const updateHeader = () => {
+    const currentY = window.scrollY || 0;
+    const delta = currentY - lastY;
+    if (currentY < 70 || delta < -5) {
+      header.classList.remove('header-scroll-hidden');
+    } else if (delta > 5 && currentY > 110) {
+      header.classList.add('header-scroll-hidden');
+    }
+    lastY = currentY;
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(updateHeader); }
+  }, { passive: true });
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Home') header.classList.remove('header-scroll-hidden');
+  });
+})();
+</script>
+
+</body>
+</html>
