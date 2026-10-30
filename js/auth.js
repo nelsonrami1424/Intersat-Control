@@ -173,8 +173,11 @@
     montarPestanaUsuarios();
 
     // ---------- Pestaña de copias de seguridad (solo administrador) ----------
-    const backupNav = document.getElementById('nav-simulator').cloneNode(true);
-    backupNav.id = 'nav-backups'; backupNav.setAttribute('onclick', "switchTab('backups')");
+    const backupNav = document.createElement('button');
+    backupNav.id = 'nav-backups';
+    backupNav.type = 'button';
+    backupNav.className = 'px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10';
+    backupNav.setAttribute('onclick', "switchTab('backups')");
     backupNav.innerHTML = '<i class="fa-solid fa-shield-halved mr-1.5"></i> Seguridad / Copias';
     document.getElementById('nav-users').after(backupNav);
     document.querySelector('main').insertAdjacentHTML('beforeend', `
