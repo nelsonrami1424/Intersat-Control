@@ -37,7 +37,7 @@
 
     // Ocultar controles de edición al usuario de solo lectura
     const st = document.createElement('style');
-    st.textContent = `body.rol-lector :is([onclick*="openWorkerModal"],[onclick*="editWorker"],[onclick*="deleteWorker"],[onclick*="deleteCategory"],[onclick*="openAttendanceEditModal"],[onclick*="resetTodayAttendance"],#nav-workers,#nav-categories,#nav-simulator,#nav-users,#tab-workers,#tab-categories,#tab-simulator,#tab-users){display:none !important}`;
+    st.textContent = `body.rol-lector :is([onclick*="openWorkerModal"],[onclick*="editWorker"],[onclick*="deleteWorker"],[onclick*="deleteCategory"],[onclick*="openAttendanceEditModal"],[onclick*="resetTodayAttendance"],#nav-workers,#nav-categories,#nav-device,#nav-users,#tab-workers,#tab-categories,#tab-device,#tab-users){display:none !important}`;
     document.head.appendChild(st);
 
     const INPUT = 'w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-[#2a3a4d] bg-slate-50 dark:bg-[#1b2735] text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-orange';
@@ -111,10 +111,10 @@
 
     // ---------- Pestaña "Usuarios" (solo administrador) ----------
     function montarPestanaUsuarios() {
-        const nav = document.getElementById('nav-simulator').cloneNode(true);
+        const nav = document.getElementById('nav-device').cloneNode(true);
         nav.id = 'nav-users'; nav.setAttribute('onclick', "switchTab('users')");
         nav.innerHTML = '<i class="fa-solid fa-user-shield mr-1.5"></i> Usuarios';
-        document.getElementById('nav-simulator').after(nav);
+        document.getElementById('nav-device').after(nav);
         const CARD = 'bg-white dark:bg-[#17212d] rounded-2xl border border-slate-200 dark:border-[#2a3a4d] shadow-sm';
         document.querySelector('main').insertAdjacentHTML('beforeend', `
         <section id="tab-users" class="space-y-6 hidden no-print">
