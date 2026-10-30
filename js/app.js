@@ -23,7 +23,6 @@ window.onload = function() {
     renderDashboard();
     renderWorkersTable();
     renderCategoriesTable();
-    populateSimulatorWorkers();
     document.getElementById('hours-month').value = todayStr().slice(0, 7);
     applyThemeIcon();
     renderHours();
@@ -317,7 +316,7 @@ function updateClock() {
 
 function switchTab(tabId) {
     if (!esAdmin() && !['dashboard', 'hours'].includes(tabId)) tabId = 'dashboard';
-    ['dashboard', 'hours', 'workers', 'categories', 'simulator', 'users', 'backups'].forEach(t => {
+    ['dashboard', 'hours', 'workers', 'categories', 'device', 'users', 'backups'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.getElementById(`nav-${t}`).classList.remove('bg-white', 'text-brand-navy', 'shadow-md', 'dark-nav-active');
         document.getElementById(`nav-${t}`).classList.add('text-slate-300');
@@ -549,7 +548,6 @@ function handleWorkerSubmit(e) {
     closeWorkerModal();
     renderWorkersTable();
     renderDashboard();
-    populateSimulatorWorkers();
 }
 
 function editWorker(id) { openWorkerModal(id); }
@@ -560,8 +558,7 @@ function deleteWorker(id) {
         localStorage.setItem('intersat_workers', JSON.stringify(workers));
         renderWorkersTable();
         renderDashboard();
-        populateSimulatorWorkers();
-        showToast('Eliminado.');
+            showToast('Eliminado.');
     }
 }
 
@@ -619,75 +616,48 @@ function deleteCategory(id) {
     }
 }
 
-function populateSimulatorWorkers() {
-    const select = document.getElementById('sim-worker-select');
-    select.innerHTML = '';
-    workers.forEach(w => select.innerHTML += `<option value="${w.id}">${w.name} (${w.ci})</option>`);
+// ---------- Comunicación local con el lector Hikvision ----------
+const LOCAL_BRIDGE_URL = 'http://127.0.0.1:8765';
+
+async function checkLocalBridge() {
+    const result = document.getElementById('device-connection-result');
+    result.textContent = 'Comprobando el servicio local…';
+    try {
+        const response = await fetch(LOCAL_BRIDGE_URL + '/api/status');
+        if (!response.ok) throw new Error('El servicio respondió con estado ' + response.status);
+        const data = await response.json();
+        result.textContent = data.message || 'Servicio local activo. Ya puedes probar el Hikvision.';
+    } catch (error) {
+        result.textContent = 'No se pudo contactar el servicio local. Ejecuta bridge\\iniciar_conector.bat y vuelve a intentarlo. Detalle: ' + error.message;
+    }
 }
 
-function simulateBiometricPunch() {
+async function testHikvisionConnection() {
     if (!esAdmin()) return denegarAccion();
-    const workerId = document.getElementById('sim-worker-select').value;
-    const punchTime = document.getElementById('sim-time').value;
-    const dateStr = document.getElementById('filter-date').value || todayStr();
-
-    if (!workerId) return;
-    const worker = workers.find(w => w.id === workerId);
-    if (!attendanceData[dateStr]) attendanceData[dateStr] = {};
-    if (!attendanceData[dateStr][workerId]) attendanceData[dateStr][workerId] = { entry: '-', lunch_out: '-', lunch_in: '-', exit: '-', color: 'slate', statusType: 'normal', delayMin: 0 };
-
-    const record = attendanceData[dateStr][workerId];
-    if (record.statusType === 'permiso' || record.entry === 'PERMISO' || record.exit === 'PERMISO') {
-        showToast('El trabajador tiene un permiso registrado para hoy.', true);
-        return;
+    const result = document.getElementById('device-connection-result');
+    const button = document.getElementById('device-test-button');
+    const ip = document.getElementById('device-ip').value.trim();
+    const port = Number(document.getElementById('device-port').value || 80);
+    const username = document.getElementById('device-user').value.trim();
+    const password = document.getElementById('device-password').value;
+    if (!ip || !username || !password) { result.textContent = 'Completa la IP, el usuario y la contraseña del dispositivo.'; return; }
+    if (!Number.isInteger(port) || port < 1 || port > 65535) { result.textContent = 'El puerto debe estar entre 1 y 65535.'; return; }
+    button.disabled = true;
+    result.textContent = 'Consultando información del Hikvision por ISAPI…';
+    try {
+        const response = await fetch(LOCAL_BRIDGE_URL + '/api/hikvision/test', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip, port, username, password })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || 'No se pudo validar el dispositivo.');
+        result.textContent = '¡Conexión correcta! Modelo: ' + (data.model || 'No informado') + '. Nombre: ' + (data.deviceName || 'No informado') + '. Serial: ' + (data.serialNumber || 'No informado') + '. ISAPI respondió correctamente.';
+    } catch (error) {
+        result.textContent = 'No se pudo conectar: ' + error.message + '. Verifica IP, red, ISAPI y credenciales.';
+    } finally {
+        button.disabled = false;
+        document.getElementById('device-password').value = '';
     }
-
-    const tMin = toMin(punchTime);
-    let punchType = '';
-
-    if (record.entry === '-') {
-        punchType = 'entry';
-    } else if (record.exit !== '-') {
-        showToast('El trabajador ya completó todos sus marcajes del día.', true);
-        return;
-    } else {
-        if (tMin >= 900 && record.lunch_out === '-') {
-            punchType = 'exit';
-        } else if (record.lunch_out === '-') {
-            if (tMin < 710 || tMin > 840) {
-                showToast('Fuera del rango permitido para salida a almuerzo (11:50 AM - 02:00 PM).', true);
-                return;
-            }
-            punchType = 'lunch_out';
-        } else if (record.lunch_in === '-') {
-            if (tMin < 710 || tMin > 870) {
-                showToast('Fuera del rango permitido para regreso de almuerzo (11:50 AM - 02:30 PM).', true);
-                return;
-            }
-            punchType = 'lunch_in';
-        } else {
-            punchType = 'exit';
-        }
-    }
-
-    record[punchType] = punchTime;
-
-    if (punchType === 'entry') {
-        const targetEntry = worker.entryTime || '08:00';
-        const diffSeconds = secondsOfDay(punchTime) - secondsOfDay(targetEntry);
-        const delay = Math.max(0, diffSeconds);
-        record.delayMin = Math.ceil(delay / 60);
-        if (diffSeconds <= 900) { record.color = 'emerald'; record.delayMin = 0; }
-        else if (diffSeconds <= 1800) { record.color = 'amber'; }
-        else if (diffSeconds <= 3600) { record.color = 'orange'; }
-        else { record.color = 'red'; }
-    }
-
-    localStorage.setItem('intersat_attendance', JSON.stringify(attendanceData));
-    const labels = { entry: 'Entrada', lunch_out: 'Salida Almuerzo', lunch_in: 'Regreso Almuerzo', exit: 'Salida Final' };
-    showToast(`¡Huella reconocida! (${labels[punchType]} a las ${fmt12(punchTime)})`);
-    switchTab('dashboard');
-    renderDashboard();
 }
 
 function toggleIndividualPermiso(field) {
