@@ -360,7 +360,7 @@
                     <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center"><i class="fa-solid fa-fingerprint text-2xl"></i></div>
                     <div><h2 class="text-base font-black text-slate-900 dark:text-slate-100">Conexión con captahuellas Hikvision</h2><p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Prueba inicial de comunicación con el DS-K1A8503MF-B mediante ISAPI.</p></div>
                 </div>
-                <div class="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 p-4 mb-5 text-xs text-blue-900 dark:text-blue-200"><b>Antes de probar:</b> conecta el captahuellas al router por Ethernet, conecta esta laptop al mismo router por Wi-Fi y ejecuta el servicio local de conexión incluido en la carpeta <code>bridge</code>. SADP Tool se utiliza para descubrir la IP del equipo; esta pantalla comprobará la comunicación con esa IP.</div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label for="device-ip" class="block text-xs font-bold mb-1.5">Dirección IP del captahuellas</label><input id="device-ip" type="text" placeholder="Ej. 192.168.1.120" autocomplete="off" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2.5 text-xs font-mono"></div>
                     <div><label for="device-port" class="block text-xs font-bold mb-1.5">Puerto HTTP</label><input id="device-port" type="number" min="1" max="65535" value="80" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2.5 text-xs font-mono"></div>
@@ -376,7 +376,7 @@
             <div class="bg-white dark:bg-[#17212d] rounded-2xl border border-slate-200 dark:border-[#2a3a4d] p-5">
                 <h3 class="text-sm font-black mb-2">Qué logra esta primera versión</h3>
                 <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-600 dark:text-slate-400"><li>Permite introducir la IP obtenida con SADP.</li><li>Comprueba que el servicio auxiliar de esta laptop esté activo.</li><li>Consulta la información básica del Hikvision por ISAPI para confirmar modelo y respuesta.</li><li>La recepción automática de marcaciones y su incorporación al control de asistencia será la siguiente etapa, después de validar esta conexión.</li></ul>
-                <p class="text-xs text-amber-700 dark:text-amber-300 mt-4">No compartas la contraseña del dispositivo ni fotografías de plantillas de huellas. Para esta prueba solo necesitamos los datos de acceso administrativos y la información técnica del equipo.</p>
+                
             </div>
         </section>
     </main>
