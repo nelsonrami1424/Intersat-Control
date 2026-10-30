@@ -71,8 +71,8 @@
                 <button onclick="switchTab('categories')" id="nav-categories" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
                     <i class="fa-solid fa-tags mr-1.5"></i> Áreas / Categorías
                 </button>
-                <button onclick="switchTab('simulator')" id="nav-simulator" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
-                    <i class="fa-solid fa-fingerprint mr-1.5"></i> Capta Huellas
+                <button onclick="switchTab('device')" id="nav-device" class="px-4 py-2 text-xs font-bold rounded-xl transition-all text-slate-300 hover:text-white hover:bg-white/10">
+                    <i class="fa-solid fa-network-wired mr-1.5"></i> Conexión biométrica
                 </button>
             </nav>
 
@@ -353,33 +353,32 @@
             </div>
         </section>
 
-        <!-- ================= PESTAÑA 4: SIMULADOR (CAPTA HUELLAS) ================= -->
-        <section id="tab-simulator" class="space-y-6 hidden no-print">
-            <div class="max-w-xl mx-auto bg-white dark:bg-[#17212d] rounded-3xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-2xl overflow-hidden">
-                <div class="bg-gradient-to-r from-brand-navy to-brand-blue p-6 text-white text-center">
-                    <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/20">
-                        <i class="fa-solid fa-fingerprint text-3xl text-brand-orange animate-pulse"></i>
-                    </div>
-                    <h2 class="text-lg font-black">Simulador de Capta Huellas</h2>
-                    <p class="text-xs text-blue-100 mt-1">Escáner biométrico estándar. El sistema detecta automáticamente si es Entrada, Almuerzo o Salida.</p>
+        <!-- ================= CONEXIÓN CON DISPOSITIVO BIOMÉTRICO ================= -->
+        <section id="tab-device" class="space-y-6 hidden no-print">
+            <div class="bg-white dark:bg-[#17212d] rounded-2xl border-2 border-slate-300 dark:border-[#2a3a4d] shadow-md p-5 md:p-6">
+                <div class="flex items-start gap-3 mb-5">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex items-center justify-center"><i class="fa-solid fa-fingerprint text-2xl"></i></div>
+                    <div><h2 class="text-base font-black text-slate-900 dark:text-slate-100">Conexión con captahuellas Hikvision</h2><p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Prueba inicial de comunicación con el DS-K1A8503MF-B mediante ISAPI.</p></div>
                 </div>
-                <div class="p-6 space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1.5">Trabajador</label>
-                        <select id="sim-worker-select" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-800 dark:text-slate-300 mb-1.5">Hora simulada del fichaje (Formato 24h)</label>
-                        <input type="time" id="sim-time" step="1" value="08:00:00" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">
-                    </div>
-                    <button onclick="simulateBiometricPunch()" class="w-full py-3 bg-brand-orange hover:bg-orange-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
-                        <i class="fa-solid fa-fingerprint text-base"></i>
-                        <span>Colocar Huella en el Dispositivo</span>
-                    </button>
+                <div class="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 p-4 mb-5 text-xs text-blue-900 dark:text-blue-200"><b>Antes de probar:</b> conecta el captahuellas al router por Ethernet, conecta esta laptop al mismo router por Wi-Fi y ejecuta el servicio local de conexión incluido en la carpeta <code>bridge</code>. SADP Tool se utiliza para descubrir la IP del equipo; esta pantalla comprobará la comunicación con esa IP.</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="device-ip" class="block text-xs font-bold mb-1.5">Dirección IP del captahuellas</label><input id="device-ip" type="text" placeholder="Ej. 192.168.1.120" autocomplete="off" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2.5 text-xs font-mono"></div>
+                    <div><label for="device-port" class="block text-xs font-bold mb-1.5">Puerto HTTP</label><input id="device-port" type="number" min="1" max="65535" value="80" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2.5 text-xs font-mono"></div>
+                    <div><label for="device-user" class="block text-xs font-bold mb-1.5">Usuario del dispositivo</label><input id="device-user" type="text" placeholder="Usuario del Hikvision" autocomplete="off" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2.5 text-xs"></div>
+                    <div><label for="device-password" class="block text-xs font-bold mb-1.5">Contraseña del dispositivo</label><input id="device-password" type="password" placeholder="Contraseña" autocomplete="new-password" class="w-full bg-slate-100 dark:bg-[#1b2735] border border-slate-300 dark:border-[#2a3a4d] rounded-xl px-3 py-2.5 text-xs"></div>
                 </div>
+                <div class="flex flex-col sm:flex-row gap-3 mt-5">
+                    <button type="button" onclick="testHikvisionConnection()" id="device-test-button" class="px-5 py-3 bg-brand-blue hover:bg-blue-800 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-plug mr-2"></i>Comprobar conexión</button>
+                    <button type="button" onclick="checkLocalBridge()" class="px-5 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-[#223041] text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl"><i class="fa-solid fa-server mr-2"></i>Comprobar servicio local</button>
+                </div>
+                <div id="device-connection-result" class="mt-5 rounded-xl bg-slate-100 dark:bg-[#1b2735] border border-slate-200 dark:border-[#2a3a4d] p-4 text-xs text-slate-700 dark:text-slate-300" role="status" aria-live="polite">Estado: pendiente de configuración. Las credenciales se envían al servicio local para la prueba y no se guardan en el navegador.</div>
+            </div>
+            <div class="bg-white dark:bg-[#17212d] rounded-2xl border border-slate-200 dark:border-[#2a3a4d] p-5">
+                <h3 class="text-sm font-black mb-2">Qué logra esta primera versión</h3>
+                <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-600 dark:text-slate-400"><li>Permite introducir la IP obtenida con SADP.</li><li>Comprueba que el servicio auxiliar de esta laptop esté activo.</li><li>Consulta la información básica del Hikvision por ISAPI para confirmar modelo y respuesta.</li><li>La recepción automática de marcaciones y su incorporación al control de asistencia será la siguiente etapa, después de validar esta conexión.</li></ul>
+                <p class="text-xs text-amber-700 dark:text-amber-300 mt-4">No compartas la contraseña del dispositivo ni fotografías de plantillas de huellas. Para esta prueba solo necesitamos los datos de acceso administrativos y la información técnica del equipo.</p>
             </div>
         </section>
-
     </main>
 
     <!-- Modal Trabajador -->
