@@ -1,0 +1,39 @@
+CONECTOR LOCAL HIKVISION - INTERSAT
+=====================================
+
+Esta primera versión solo comprueba la comunicación ISAPI y lee los datos básicos
+del dispositivo. Todavía NO descarga marcaciones ni las registra en asistencia.
+
+REQUISITOS
+- Windows 10/11.
+- Python 3.10 o superior instalado.
+- Laptop y captahuellas conectados a la misma red local.
+- IP del equipo obtenida con SADP.
+- Usuario y contraseña autorizados del dispositivo.
+
+INICIO
+1. Abre iniciar_conector.bat.
+2. La primera vez instalará las librerías necesarias. Necesita Internet solo durante
+   esa instalación.
+3. Cuando muestre "Conector activo en http://127.0.0.1:8765", deja la ventana abierta.
+4. Abre el programa Intersat, entra en "Conexión biométrica".
+5. Pulsa "Comprobar servicio local".
+6. Introduce IP, puerto HTTP (normalmente 80), usuario y contraseña del Hikvision.
+7. Pulsa "Comprobar conexión".
+
+SEGURIDAD
+- El servicio escucha únicamente en 127.0.0.1 (esta laptop); no se publica en la LAN.
+- La contraseña se usa en memoria para la consulta y no se guarda en disco ni en localStorage.
+- No introduzcas aquí contraseñas de Windows, correo ni otros servicios.
+- No compartas credenciales ni datos biométricos.
+
+SI FALLA
+- Verifica IP y puerto con SADP/configuración del equipo.
+- Confirma que laptop y dispositivo estén en la misma red y que haya ruta entre ambos.
+- Verifica que el usuario tenga permisos de consulta ISAPI.
+- Un fallo no significa que haya que restablecer el dispositivo.
+
+SIGUIENTE ETAPA
+Una vez confirmada la conexión, se implementará la lectura de eventos y su conversión
+a los registros de entrada, salida a almuerzo, regreso y salida final. Se debe verificar
+el formato de eventos que entrega el firmware exacto antes de activar el registro real.
